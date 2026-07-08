@@ -27,8 +27,7 @@ def get_virtual_sources_torch(source: List[float],
     source_tensor = torch.tensor(source, dtype=torch.float32, device=device)
     room_width_tensor = torch.tensor(room_width, dtype=torch.float32, device=device)
     room_height_tensor = torch.tensor(room_height, dtype=torch.float32, device=device)
-
-    # Преобразуем коэффициенты отражения в тензоры
+                                
     refl_tensors = {}
     for wall in ['left', 'right', 'bottom', 'top']:
         refl_tensors[wall] = torch.tensor(reflection_coeffs_freq[wall],
@@ -66,10 +65,6 @@ def get_virtual_sources_torch(source: List[float],
                                  refl_tensors['bottom'],
                                  refl_tensors['top']], dim=0)  # [4, 6]
 
-    # Вычисляем эффективные коэффициенты для всех источников и частот одновременно
-    # counts_matrix[:, :, None] создает размерность [n_sources, 4, 1]
-    # coeffs_matrix[None, :, :] создает размерность [1, 4, 6]
-    # Результат: [n_sources, 4, 6]
     powered_coeffs = coeffs_matrix[None, :, :] ** counts_matrix[:, :, None]
 
     # Перемножаем по оси стен (ось 1) для получения [n_sources, 6]
@@ -112,10 +107,6 @@ def find_wall_intersections_torch(p1: torch.Tensor,
                                   p2: torch.Tensor,
                                   room_width: float,
                                   room_height: float) -> List[Tuple]:
-    """
-    Находит пересечения отрезка со стенами помещения.
-    p1, p2: тензоры формы [2] или [batch_size, 2]
-    """
     if p1.dim() == 1:
         p1 = p1.unsqueeze(0)
         p2 = p2.unsqueeze(0)
@@ -174,9 +165,7 @@ def calculate_paths_and_energies_torch(virtual_sources_dict: Dict[str, torch.Ten
                                        receiver: List[float],
                                        room_width: float,
                                        room_height: float) -> Dict[str, torch.Tensor]:
-    """
-    Вычисление путей и энергий для всех виртуальных источников на GPU.
-    """
+
     positions = virtual_sources_dict['positions']  # [n_sources, 2]
     energy_factors = virtual_sources_dict['energy_factors']  # [n_sources, 6]
     n_sources = positions.shape[0]
@@ -247,11 +236,7 @@ def plot_reflection_path(ax, points: List[Tuple[float, float]], color: str = 'y'
 
 def fit_energy_curves_torch(distances: np.ndarray,
                             energies_matrix: np.ndarray) -> np.ndarray:
-    """
-    Аппроксимация кривых энергии с использованием PyTorch для оптимизации.
-    energies_matrix: [n_samples, 6]
-    Возвращает: оптимальные значения C для каждой частоты [6]
-    """
+
     # Преобразуем в тензоры
     distances_tensor = torch.tensor(distances, dtype=torch.float32, device=device)
     energies_tensor = torch.tensor(energies_matrix, dtype=torch.float32, device=device)
@@ -269,7 +254,6 @@ def draw_room_and_sources_torch(room_width: float,
                                 receiver: List[float],
                                 max_order: int,
                                 reflection_coeffs_freq: Dict[str, List[float]]):
-    """Основная функция визуализации с использованием PyTorch для вычислений на GPU."""
 
     print(f"\n{'=' * 60}")
     print("Начало вычислений на GPU...")
@@ -453,7 +437,6 @@ def draw_room_and_sources_torch(room_width: float,
 
 
 def validate_input_coefficients(coeffs_dict: Dict[str, List[float]]) -> bool:
-    """Проверка корректности введенных коэффициентов."""
     for wall, coeffs in coeffs_dict.items():
         if len(coeffs) != FREQ_COUNT:
             print(f"Ошибка: для стены '{wall}' должно быть {FREQ_COUNT} значений")
@@ -465,7 +448,6 @@ def validate_input_coefficients(coeffs_dict: Dict[str, List[float]]) -> bool:
 
 
 def get_user_input() -> Tuple[int, Dict[str, List[float]]]:
-    """Получение входных данных от пользователя."""
     print("\n" + "=" * 60)
     print("МОДЕЛИРОВАНИЕ АКУСТИКИ ПОМЕЩЕНИЯ С GPU УСКОРЕНИЕМ")
     print("=" * 60)
@@ -500,7 +482,7 @@ def get_user_input() -> Tuple[int, Dict[str, List[float]]]:
 
 
 def main():
-    """Основная функция программы."""
+
     # Параметры помещения (можно сделать настраиваемыми)
     room_width = 10.0
     room_height = 8.0
